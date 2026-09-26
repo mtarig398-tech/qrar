@@ -10,7 +10,7 @@ from .mcp_client import MCPClient
 
 class PowerBIConnector:
     def __init__(self):
-        self._client = MCPClient(config.POWERBI_MCP_PATH)
+        self._client = MCPClient(config.POWERBI_MCP_PATH, config.MCP_LAUNCH_ARGS)
         self._started = False
 
     def ensure_started(self) -> None:
@@ -20,17 +20,20 @@ class PowerBIConnector:
 
     def get_schema(self) -> dict:
         self.ensure_started()
+        arguments = json.loads(config.MCP_SCHEMA_ARGUMENTS)
         raw = self._client.call_tool(
-            config.MCP_SCHEMA_TOOL, {}, timeout=config.MCP_REQUEST_TIMEOUT
+            config.MCP_SCHEMA_TOOL, arguments, timeout=config.MCP_REQUEST_TIMEOUT
         )
         return _safe_json(raw)
 
     def execute_dax(self, dax_query: str) -> dict:
         self.ensure_started()
+        rendered = config.MCP_DAX_ARGUMENTS_TEMPLATE.replace(
+            "__DAX_QUERY__", json.dumps(dax_query)
+        )
+        arguments = json.loads(rendered)
         raw = self._client.call_tool(
-            config.MCP_DAX_TOOL,
-            {"query": dax_query},
-            timeout=config.MCP_REQUEST_TIMEOUT,
+            config.MCP_DAX_TOOL, arguments, timeout=config.MCP_REQUEST_TIMEOUT
         )
         return _safe_json(raw)
 

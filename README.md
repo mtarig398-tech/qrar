@@ -117,18 +117,57 @@ ollama pull llama3
 streamlit run app.py
 ```
 
-### التحقق من أدوات MCP
+### من أين تحصل على powerbi-modeling-mcp.exe
 
-بما أن أسماء الأدوات الفعلية تعتمد على إصدار `powerbi-modeling-mcp.exe`،
-أضِف زر تشخيص مؤقت أو استخدم من الطرفية:
+هذه أداة **رسمية من مايكروسوفت** (وليست ملفاً وهمياً) — المستودع الرسمي:
+[microsoft/powerbi-modeling-mcp](https://github.com/microsoft/powerbi-modeling-mcp).
+هناك طريقتان للحصول عليها:
 
-```python
-from core.powerbi import PowerBIConnector
-c = PowerBIConnector()
-print(c.list_available_tools())
+**الطريقة أ — تنزيل مباشر (الأنسب لعميل بدون Node.js):**
+1. اذهب لصفحة الإضافة على VS Code Marketplace الخاصة بـ
+   `analysis-services.powerbi-modeling-mcp` وحمّل ملف `.vsix` لآخر إصدار
+   (أو استخدم رابط النمط: `https://marketplace.visualstudio.com/_apis/public/gallery/publishers/analysis-services/vsextensions/powerbi-modeling-mcp/[version]/vspackage?targetPlatform=win32-x64`
+   بعد استبدال `[version]` بالإصدار الحالي من صفحة الإضافة).
+2. أعد تسمية الملف من `.vsix` إلى `.zip` وفكّ الضغط عنه.
+3. ستجد الملف التنفيذي داخل: `extension\server\powerbi-modeling-mcp.exe`
+4. انسخه إلى `qrar\bin\powerbi-modeling-mcp.exe` كما هو موضح أعلاه.
+
+**الطريقة ب — عبر npx (تتطلب تثبيت Node.js):**
 ```
+npx -y @microsoft/powerbi-modeling-mcp@latest --start
+```
+في هذه الحالة عدّل `.env`: اجعل `POWERBI_MCP_PATH=npx` وأضف
+`MCP_LAUNCH_ARGS=-y,@microsoft/powerbi-modeling-mcp@latest,--start,--readonly`.
 
-وحدّث `MCP_SCHEMA_TOOL` / `MCP_DAX_TOOL` في `.env` لتطابق الأسماء الظاهرة.
+### وضع القراءة فقط (readonly)
+
+يشغّل التطبيق الخادم افتراضياً بالوسيطتين `--start --readonly` (عبر
+`MCP_LAUNCH_ARGS` في `.env`)، لأن الخادم الحقيقي يدعم أيضاً تعديل النموذج
+(إضافة/حذف جداول، مقاييس...) وهو أمر غير مطلوب في تطبيق "اسأل بياناتك".
+لا تُزل `--readonly` إلا إذا كنت تنوي فعلاً السماح للذكاء الاصطناعي بتعديل
+النموذج.
+
+### التحقق من أدوات MCP (مهم)
+
+الخادم الحقيقي يعرض **23 فئة أدوات** (مثل `dax_query_operations`,
+`model_operations`, `table_operations`...) وليس أداتين بسيطتين كما قد
+يوحي الاسم. الصيغة الدقيقة لمعاملات كل أداة (arguments schema) غير موثقة
+علناً وتعتمد على الإصدار المثبت لديك، لذلك أضفنا لوحة تشخيص مباشرة داخل
+التطبيق:
+
+من الشريط الجانبي في التطبيق، افتح **"🔧 أدوات MCP المتاحة (تشخيص)"** ثم
+اضغط **"جلب قائمة الأدوات"** — سيعرض لك اسم كل أداة ووصفها وصيغة معاملاتها
+(inputSchema) الحقيقية مباشرة من الخادم المتصل فعلياً.
+
+القيم الافتراضية الحالية في `config.py`:
+- `MCP_DAX_TOOL=dax_query_operations` (شبه مؤكد من توثيق مايكروسوفت).
+- `MCP_SCHEMA_TOOL=model_operations` مع `MCP_SCHEMA_ARGUMENTS={"operation": "list"}`
+  (تخمين معقول، يحتاج تأكيداً من لوحة التشخيص).
+- `MCP_DAX_ARGUMENTS_TEMPLATE={"operation": "run", "query": __DAX_QUERY__}`
+  (`__DAX_QUERY__` يُستبدل تلقائياً بنص DAX مُهرّب بأمان كـ JSON).
+
+إذا أظهرت لوحة التشخيص أسماء معاملات مختلفة، عدّل هذه القيم الثلاث في
+`.env` دون الحاجة لتعديل الكود.
 
 ## 3. قرارات التصميم (لتفادي الأخطاء الشائعة)
 

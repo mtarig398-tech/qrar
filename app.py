@@ -108,6 +108,24 @@ with st.sidebar:
     st.caption("ترتيب مزودي الذكاء الاصطناعي (Smart Fallback):")
     st.caption(" → ".join(config.PROVIDER_ORDER))
 
+    with st.expander("🔧 أدوات MCP المتاحة (تشخيص)"):
+        st.caption(
+            "أسماء الأدوات وصيغة معاملاتها (arguments) تعتمد على الإصدار "
+            "المثبت من powerbi-modeling-mcp.exe. استخدم هذا لمعرفة الأسماء "
+            "والصيغة الحقيقية إذا فشلت استعلامات DAX أو جلب المخطط."
+        )
+        if st.button("جلب قائمة الأدوات", use_container_width=True):
+            try:
+                tools = connector.list_available_tools()
+                for tool in tools:
+                    st.markdown(f"**{tool.get('name')}**")
+                    if tool.get("description"):
+                        st.caption(tool["description"])
+                    if tool.get("inputSchema"):
+                        st.json(tool["inputSchema"])
+            except MCPError as exc:
+                st.error(f"تعذّر جلب قائمة الأدوات: {exc}")
+
 st.title("💬 اسأل بياناتك")
 
 for message in st.session_state.messages:
