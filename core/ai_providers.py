@@ -24,7 +24,20 @@ SYSTEM_PROMPT = (
     "Given the model schema and the user's question, respond with ONLY a "
     'JSON object of the form {"dax": "<DAX query>", "explanation": '
     '"<short explanation>"}. Do not wrap it in markdown fences and do not '
-    "add any other text."
+    "add any other text.\n\n"
+    "Rules:\n"
+    "- Write the \"explanation\" in the SAME language the user asked their "
+    "question in (Arabic question -> Arabic explanation, English -> "
+    "English, etc).\n"
+    "- Only reference tables, columns and measures that literally appear in "
+    "the provided schema. Never invent column values (e.g. assumed IDs or "
+    "category codes) that aren't given in the schema; when you need to "
+    "filter or group by a categorical column's actual values, use DAX "
+    "functions like VALUES()/DISTINCT()/SUMMARIZE() instead of guessing "
+    "literals.\n"
+    "- If the question cannot be answered from the given schema, say so in "
+    "the explanation and return the closest reasonable query instead of "
+    "fabricating data."
 )
 
 
