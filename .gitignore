@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.streamlit/secrets.toml
+
+# Saved chat sessions are per-machine runtime data, not source.
+chats/*.json
+!chats/.gitkeep
+
+# Local copy of the vendor executable.
+bin/*.exe
+!bin/.gitkeep
