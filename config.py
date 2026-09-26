@@ -74,4 +74,8 @@ PROVIDER_ORDER = [
     if p.strip()
 ]
 
-AI_REQUEST_TIMEOUT = float(os.environ.get("AI_REQUEST_TIMEOUT", "45"))
+# Local CPU-only Ollama can easily take over a minute, especially on the
+# first request after startup (the model has to load into RAM before it
+# generates anything). 180s gives it realistic room; cloud providers return
+# in seconds regardless, so this only matters for Ollama in practice.
+AI_REQUEST_TIMEOUT = float(os.environ.get("AI_REQUEST_TIMEOUT", "180"))
